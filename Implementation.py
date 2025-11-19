@@ -1,9 +1,8 @@
 #importing
-
 import numpy as np
 import cvxpy as cp
 
-#initialise variables
+#default variables
 dt = 0.1
 N = 50
 init_y = 0.0
@@ -13,6 +12,113 @@ final_vy_target = 0.0
 u_max = 3.0
 v_max = 2.0
 penalty_slack = 1000000.0
+
+# Command line inputs for variables
+# for dt :
+while True:
+    s = input("enter dt [Example format : 0.1] : (Press enter key for default value)").strip()
+    if s == "":
+        dt = 0.1
+        break
+    try:
+        dt = float(s)
+        if dt > 0:
+            break
+        print("dt must be > 0.")
+    except:
+        print("Invalid input. Try again.")
+
+while True:
+    s = input("enter N [Example format : 50 (integer >=1) ] : (Press enter key for default value)").strip()
+    if s == "":
+        N = 50
+        break
+    try:
+        N = int(s)
+        if N >= 1:
+            break
+        print("N must be integer >= 1.")
+    except:
+        print("Invalid input. Try again.")
+
+while True:
+    s = input("Enter init_y [Example foramat : 0.0] : (Press enter key for default value)").strip()
+    if s == "":
+        init_y = 0.0
+        break
+    try:
+        init_y = float(s); break
+    except:
+        print("Invalid input. Try again.")
+
+while True:
+    s = input("Enter init_vy [Example format : 0.0] : (Press enter key for default value)").strip()
+    if s == "":
+        init_vy = 0.0
+        break
+    try:
+        init_vy = float(s); break
+    except:
+        print("Invalid input. Try again.")
+
+while True:
+    s = input("Enter target_y [Example format : 3.5] : (Press enter key for default value)").strip()
+    if s == "":
+        target_y = 3.5
+        break
+    try:
+        target_y = float(s); break
+    except:
+        print("Invalid input. Try again.")
+
+while True:
+    s = input("Enter final_vy_target [Example format : 0.0] : (Press enter key for default value)").strip()
+    if s == "":
+        final_vy_target = 0.0
+        break
+    try:
+        final_vy_target = float(s); break
+    except:
+        print("Invalid input. Try again.")
+
+while True:
+    s = input("Enter u_max [Example format : 3.0] : (Press enter key for default value)").strip()
+    if s == "":
+        u_max = 3.0
+        break
+    try:
+        u_max = float(s)
+        if u_max >= 0:
+            break
+        print("u_max must be >= 0.")
+    except:
+        print("Invalid input. Try again.")
+
+while True:
+    s = input("Enter v_max [Example format : 2.0] (>=0) : (Press enter key for default value)").strip()
+    if s == "":
+        v_max = 2.0
+        break
+    try:
+        v_max = float(s)
+        if v_max >= 0:
+            break
+        print("v_max must be >= 0.")
+    except:
+        print("Invalid input. Try again.")
+
+while True:
+    s = input("Enter penalty_slack [Example format : 1000000] (>0) : (Press enter key for default value)").strip()
+    if s == "":
+        penalty_slack = 1e6
+        break
+    try:
+        penalty_slack = float(s)
+        if penalty_slack > 0:
+            break
+        print("penalty_slack must be > 0.")
+    except:
+        print("Invalid input. Try again.")
 
 #dynamic matrices
 A = np.array([[1.0, dt],
