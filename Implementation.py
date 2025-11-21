@@ -89,12 +89,27 @@ def main():
 
     prob = cp.Problem(cp.Minimize(cost), constraints)
 
+    # Store KKT indicators for both solvers
+    osqp_dual_indicator = []
+    osqp_primal_indicator = []
+    scs_dual_indicator = []
+    scs_primal_indicator = []
+
     # ---------------- OSQP timing ----------------
     t0 = time.time()
     prob.solve(solver=cp.OSQP, verbose=False)
     osqp_time = time.time() - t0
     print("\nOSQP Solve status:", prob.status)
     print(f"OSQP time taken = {osqp_time:.6f} seconds")
+
+    # -------------- KKT CHECK ----------------
+    for k_check in range(len(kkt_constraint)):
+        c = kkt_constraint[k_check]
+        dual = float(c.dual_value)
+        osqp_dual_indicator.append(1 if dual >= 0 else -1)
+        primal_gap = float(c.violation())
+        osqp_primal_indicator.append(1 if primal_gap <= 0 else -1)
+        comp = primal_gap * dual
 
     x_osqp = np.array(x.value)
     u_osqp = np.array(u.value).reshape(-1)
@@ -105,6 +120,15 @@ def main():
     scs_time = time.time() - t1
     print("\nSCS Solve status:", prob.status)
     print(f"SCS time taken  = {scs_time:.6f} seconds")
+
+    # -------------- KKT CHECK ----------------
+    for k_check in range(len(kkt_constraint)):
+        c = kkt_constraint[k_check]
+        dual = float(c.dual_value)
+        scs_dual_indicator.append(1 if dual >= 0 else -1)
+        primal_gap = float(c.violation())
+        scs_primal_indicator.append(1 if primal_gap <= 0 else -1)
+        comp = primal_gap * dual
 
     x_scs = np.array(x.value)
     u_scs = np.array(u.value).reshape(-1)
@@ -130,6 +154,39 @@ def main():
     plt.ylabel("Time (seconds)")
     plt.title("Solver Runtime Comparison")
     plt.grid(axis='y', linestyle='--', alpha=0.5)
+    plt.show()
+
+
+    # --------- Plotting for kkt (dual , primal values gap)---------
+    plt.figure(figsize=(12, 10))
+
+    ks = np.arange(len(kkt_constraint))
+
+    plt.subplot(2, 2, 1)
+    plt.stem(ks, osqp_dual_indicator)
+    plt.title("OSQP: Dual Feasibility (>=0→1, else -1)")
+    plt.ylim(-1.5, 1.5)
+    plt.grid(True)
+
+    plt.subplot(2, 2, 2)
+    plt.stem(ks, osqp_primal_indicator)
+    plt.title("OSQP: Primal Feasibility (<=0→1, else -1)")
+    plt.ylim(-1.5, 1.5)
+    plt.grid(True)
+
+    plt.subplot(2, 2, 3)
+    plt.stem(ks, scs_dual_indicator)
+    plt.title("SCS: Dual Feasibility (>=0→1, else -1)")
+    plt.ylim(-1.5, 1.5)
+    plt.grid(True)
+
+    plt.subplot(2, 2, 4)
+    plt.stem(ks, scs_primal_indicator)
+    plt.title("SCS: Primal Feasibility (<=0→1, else -1)")
+    plt.ylim(-1.5, 1.5)
+    plt.grid(True)
+
+    plt.tight_layout()
     plt.show()
 
     # -------------- Trajectory & control plot (both solvers) --------------
@@ -165,20 +222,6 @@ def main():
 
         plt.tight_layout()
         plt.show()
-
-    # -------------- KKT CHECK ----------------
-    k_check = 5
-    if k_check < len(kkt_constraint):
-        c = kkt_constraint[k_check]
-        dual = float(c.dual_value)
-        primal_gap = float(c.violation())
-        comp = primal_gap * dual
-
-        print("\n===== KKT CHECK (k = 5) =====")
-        print(f"Primal gap = {primal_gap}")
-        print(f"Dual var   = {dual}")
-        print(f"Slackness  = {comp}")
-        print("================================")
 
 if __name__ == "__main__":
     main()
