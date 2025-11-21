@@ -104,8 +104,11 @@ def main():
                              cp.sum_squares(slack_final))
 
     # Add obstacle constraints
+    obs_constraints = []
     for k in range(k_obs_start, k_obs_end):
-        constraints += [x[0, k] >= target_y]
+        c_obs = (x[0, k] >= target_y)
+        constraints += [c_obs]
+        obs_constraints.append(c_obs)
 
     # Build problems
     prob1 = cp.Problem(cp.Minimize(cost), constraints)
@@ -131,6 +134,13 @@ def main():
         osqp_dual_indicator.append(1 if dual >= 0 else -1)
         primal_gap = float(c.violation())
         osqp_primal_indicator.append(1 if primal_gap <= 0 else -1)
+    # ---Obstacle dual values (OSQP) ---
+    obs_duals = []
+    for c in obs_constraints:
+        dv = c.dual_value
+        if dv is None:
+            dv = 0
+        obs_duals.append(abs(float(dv)))
 
     x_osqp = np.array(x.value)
     u_osqp = np.array(u.value).reshape(-1)
@@ -208,6 +218,34 @@ def main():
     plt.tight_layout()
     plt.show()
 
+        # ======================================
+    # OBSTACLE SENSITIVITY (Dual Values)
+    # ======================================
+    plt.figure(figsize=(8, 5))
+
+    obs_steps = np.arange(k_obs_start, k_obs_end)
+
+    plt.bar(obs_steps * dt, obs_duals, color='orange', alpha=0.7, width=0.08)
+    plt.title("Obstacle Sensitivity Analysis (Lagrange Multipliers)")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Shadow Price (Dual Value)")
+    plt.grid(axis='y', linestyle='--')
+
+    max_dual = np.max(obs_duals) if len(obs_duals) > 0 else 0
+    if max_dual > 1e-4:
+        plt.text(0.5, 0.92,
+                 "Active Constraint: Obstacle forced trajectory change.",
+                 ha='center', transform=plt.gca().transAxes,
+                 color='red', fontweight='bold')
+    else:
+        plt.text(0.5, 0.92,
+                 "Inactive: Obstacle did not affect trajectory.",
+                 ha='center', transform=plt.gca().transAxes,
+                 color='green', fontweight='bold')
+
+    plt.show()
+
+
     # -------------- Trajectory & control plot --------------
     if plot_result.startswith('y'):
 
@@ -240,5 +278,5 @@ def main():
         plt.tight_layout()
         plt.show()
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     main()
