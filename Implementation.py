@@ -1,8 +1,10 @@
-# importing
+# importing libraries
+
 import numpy as np
 import cvxpy as cp
+import matplotlib.pyplot as plt
 
-# reduce redundancy by defining input function
+# input helper function
 def get_input(prompt, default, cast=float, validator=None):
     while True:
         s = input(f"{prompt} [{default}]: ").strip()
@@ -15,10 +17,9 @@ def get_input(prompt, default, cast=float, validator=None):
             print("Validation failed. Try again.")
         except:
             print("Invalid input. Try again.")
-
-
-# ------ main function -------
+# ------- main --------
 def main():
+    print("v10.py — v9 plus plotting (no obstacle shown)")
     dt = get_input("dt (s)", 0.1, float, lambda v: v>0)
     N = get_input("N (steps, integer >=1)", 50, int, lambda v: v>=1)
     init_y = get_input("init_y (m)", 0.0, float)
@@ -29,8 +30,10 @@ def main():
     v_max = get_input("v_max (m/s)", 2.0, float, lambda v: v>=0)
     jerk_max = get_input("jerk_max (m/s^3)", 2.0, float, lambda v: v>=0)
     penalty_slack = get_input("penalty_slack", 1e6, float, lambda v: v>0)
+    plot_result = input("plot_result (y/n) [y]: ").strip().lower()
+    if plot_result == "": plot_result = "y"
 
-    # dymanic matrices
+    # dynamic matrices
     A = np.array([[1.0, dt],[0.0, 1.0]])
     B = np.array([[0.5*dt*dt],[dt]])
 
@@ -74,11 +77,21 @@ def main():
     if prob.status in ["optimal", "optimal_inaccurate"]:
         x_np = np.array(x.value)
         u_np = np.array(u.value).reshape(-1)
-        np.set_printoptions(threshold=np.inf, linewidth=200)
-        print("y : (Full Trajectory):")
-        print(np.round(x_np[0, :], 4))
-        print("\nu : (Full Control Inputs):")
-        print(np.round(u_np, 4))
+        t = np.arange(N+1)*dt
+        #plotting
+        if plot_result.startswith('y'):
+            fig, axs = plt.subplots(2,1, figsize=(9,6))
+            axs[0].plot(t, x_np[0,:], marker='o', label='y (lateral position)')
+            axs[0].axhline(target_y, color='k', linestyle='--', label='target lane center')
+            axs[0].set_ylabel('lateral position y (m)')
+            axs[0].legend()
+            axs[1].step(np.arange(u_np.size)*dt, u_np, where='post', marker='o')
+            axs[1].set_xlabel('time (s)')
+            axs[1].set_ylabel('lateral acceleration u (m/s^2)')
+            plt.tight_layout()
+            plt.show()
+        else:
+            print("Plot suppressed by user.")
     else:
         print("Solve failed or infeasible.")
 
