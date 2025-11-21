@@ -34,8 +34,33 @@ def main():
     plot_result = input("plot_result (y/n) [y]: ").strip().lower()
     if plot_result == "":
         plot_result = "y"
-    obs_t_start = get_input("Obstacle start time (s)", 2.5, float, lambda v: v >= 0)
-    obs_t_end   = get_input("Obstacle end time (s)", 4.5, float, lambda v: v > obs_t_start)
+
+    # ==========================
+    # STRICT OBSTACLE VALIDATION (INDEX-BASED)
+    # ==========================
+
+    print("\nEnter obstacle times (in seconds).")
+    print("They will be converted into step indices using floor/ceil.\n")
+
+    while True:
+        obs_t_start = get_input("Obstacle start time (s)", 2.5, float)
+        obs_t_end   = get_input("Obstacle end   time (s)", 4.5, float)
+
+        # convert time → index
+        k_obs_start = int(np.floor(obs_t_start / dt))
+        k_obs_end   = int(np.ceil(obs_t_end / dt))
+
+        # Now validate USING INDEX CONDITIONS
+        if not (0 <= k_obs_start < k_obs_end <= N):
+            print("\nERROR: Invalid obstacle time window.")
+            print("After converting to indices:")
+            print(f"  k_obs_start = {k_obs_start}")
+            print(f"  k_obs_end   = {k_obs_end}")
+            print("Required: 0 <= k_obs_start < k_obs_end <= N")
+            print("Please re-enter.\n")
+            continue
+
+        break
 
     # dynamic matrices
     A = np.array([[1.0, dt], [0.0, 1.0]])
@@ -78,16 +103,13 @@ def main():
                              cp.sum_squares(slack_v) +
                              cp.sum_squares(slack_final))
 
-    # Obstacle mapping
-    k_obs_start = int(obs_t_start / dt)
-    k_obs_end   = int(obs_t_end / dt)
-    k_obs_start = max(0, min(N-1, k_obs_start))
-    k_obs_end   = max(k_obs_start+1, min(N, k_obs_end))
-
+    # Add obstacle constraints
     for k in range(k_obs_start, k_obs_end):
         constraints += [x[0, k] >= target_y]
 
-    prob = cp.Problem(cp.Minimize(cost), constraints)
+    # Build problems
+    prob1 = cp.Problem(cp.Minimize(cost), constraints)
+    prob2 = cp.Problem(cp.Minimize(cost), constraints)
 
     # Store KKT indicators for both solvers
     osqp_dual_indicator = []
@@ -97,38 +119,36 @@ def main():
 
     # ---------------- OSQP timing ----------------
     t0 = time.time()
-    prob.solve(solver=cp.OSQP, verbose=False)
+    prob1.solve(solver=cp.OSQP, verbose=False)
     osqp_time = time.time() - t0
-    print("\nOSQP Solve status:", prob.status)
+    print("\nOSQP Solve status:", prob1.status)
     print(f"OSQP time taken = {osqp_time:.6f} seconds")
 
-    # -------------- KKT CHECK ----------------
+    # KKT check (OSQP)
     for k_check in range(len(kkt_constraint)):
         c = kkt_constraint[k_check]
         dual = float(c.dual_value)
         osqp_dual_indicator.append(1 if dual >= 0 else -1)
         primal_gap = float(c.violation())
         osqp_primal_indicator.append(1 if primal_gap <= 0 else -1)
-        comp = primal_gap * dual
 
     x_osqp = np.array(x.value)
     u_osqp = np.array(u.value).reshape(-1)
 
     # ---------------- SCS timing ----------------
     t1 = time.time()
-    prob.solve(solver=cp.SCS, verbose=False)
+    prob2.solve(solver=cp.SCS, verbose=False)
     scs_time = time.time() - t1
-    print("\nSCS Solve status:", prob.status)
+    print("\nSCS Solve status:", prob2.status)
     print(f"SCS time taken  = {scs_time:.6f} seconds")
 
-    # -------------- KKT CHECK ----------------
+    # KKT check (SCS)
     for k_check in range(len(kkt_constraint)):
         c = kkt_constraint[k_check]
         dual = float(c.dual_value)
         scs_dual_indicator.append(1 if dual >= 0 else -1)
         primal_gap = float(c.violation())
         scs_primal_indicator.append(1 if primal_gap <= 0 else -1)
-        comp = primal_gap * dual
 
     x_scs = np.array(x.value)
     u_scs = np.array(u.value).reshape(-1)
@@ -156,46 +176,44 @@ def main():
     plt.grid(axis='y', linestyle='--', alpha=0.5)
     plt.show()
 
-
-    # --------- Plotting for kkt (dual , primal values gap)---------
+    # --------- KKT plot ---------
     plt.figure(figsize=(12, 10))
 
     ks = np.arange(len(kkt_constraint))
 
     plt.subplot(2, 2, 1)
     plt.stem(ks, osqp_dual_indicator)
-    plt.title("OSQP: Dual Feasibility (>=0→1, else -1)")
+    plt.title("OSQP: Dual Feasibility")
     plt.ylim(-1.5, 1.5)
     plt.grid(True)
 
     plt.subplot(2, 2, 2)
     plt.stem(ks, osqp_primal_indicator)
-    plt.title("OSQP: Primal Feasibility (<=0→1, else -1)")
+    plt.title("OSQP: Primal Feasibility")
     plt.ylim(-1.5, 1.5)
     plt.grid(True)
 
     plt.subplot(2, 2, 3)
     plt.stem(ks, scs_dual_indicator)
-    plt.title("SCS: Dual Feasibility (>=0→1, else -1)")
+    plt.title("SCS: Dual Feasibility")
     plt.ylim(-1.5, 1.5)
     plt.grid(True)
 
     plt.subplot(2, 2, 4)
     plt.stem(ks, scs_primal_indicator)
-    plt.title("SCS: Primal Feasibility (<=0→1, else -1)")
+    plt.title("SCS: Primal Feasibility")
     plt.ylim(-1.5, 1.5)
     plt.grid(True)
 
     plt.tight_layout()
     plt.show()
 
-    # -------------- Trajectory & control plot (both solvers) --------------
+    # -------------- Trajectory & control plot --------------
     if plot_result.startswith('y'):
 
         t = np.arange(N+1) * dt
         fig, axs = plt.subplots(2, 1, figsize=(10, 8))
 
-        # Trajectories
         axs[0].plot(t, x_osqp[0, :], marker='o', label='OSQP')
         axs[0].plot(t, x_scs[0, :], marker='x', label='SCS')
         axs[0].axhline(target_y, color='k', linestyle='--')
@@ -212,9 +230,8 @@ def main():
         axs[0].legend()
         axs[0].set_title("Trajectory Comparison: OSQP vs SCS")
 
-        # Control inputs
         axs[1].step(t[:-1], u_osqp, where='post', label='OSQP', marker='o')
-        axs[1].step(t[:-1], u_scs,  where='post', label='SCS', marker='x')
+        axs[1].step(t[:-1], u_scs, where='post', label='SCS', marker='x')
         axs[1].set_xlabel("time (s)")
         axs[1].set_ylabel("u (acc)")
         axs[1].legend()
