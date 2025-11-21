@@ -34,7 +34,6 @@ def main():
     A = np.array([[1.0, dt],[0.0, 1.0]])
     B = np.array([[0.5*dt*dt],[dt]])
 
-
     # Decision variables
     u = cp.Variable((N,1))
     x = cp.Variable((2, N+1))
