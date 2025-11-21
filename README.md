@@ -1,6 +1,4 @@
-===============================================================================
 TEAM OPTICORE - OPTIMIZATION COURSE PROJECT
-===============================================================================
 
 Project Title:    Minimum-Energy Trajectory Control (Autonomous Lane Change)
 Course:           Optimization
@@ -10,9 +8,7 @@ Team Members:
 1. D Harsha Vardhan (BT2024106)
 2. P Prajwal        (BT2024245)
 
-===============================================================================
 1. PROJECT DESCRIPTION
-===============================================================================
 This project solves the optimal trajectory generation problem for an autonomous 
 vehicle performing a lane-change maneuver while avoiding a dynamic obstacle. 
 
@@ -29,9 +25,7 @@ Key Features:
 - Analysis: KKT/Lagrangian analysis to evaluate constraint sensitivity (Shadow Prices).
 - Solver Comparison: Performance benchmarking between OSQP and SCS solvers.
 
-===============================================================================
 2. FILE STRUCTURE
-===============================================================================
 The submitted zip file contains:
 
 1. `Implementation.ipynb`  : The main Jupyter Notebook containing all code, 
@@ -40,9 +34,7 @@ The submitted zip file contains:
 3. `Project_Report.pdf`    : Detailed report covering formulation, methodology, 
                              and results.
 
-===============================================================================
 3. PREREQUISITES & LIBRARIES
-===============================================================================
 The project is implemented in Python 3. The following libraries are required 
 to run the code:
 
@@ -54,9 +46,7 @@ to run the code:
 To install dependencies, run:
 $ pip install numpy cvxpy matplotlib
 
-===============================================================================
 4. SETUP & EXECUTION INSTRUCTIONS
-===============================================================================
 1. Unzip the folder `Opticore.zip`.
 2. Open a terminal or command prompt in the extracted folder.
 3. Launch Jupyter Notebook:
@@ -75,9 +65,7 @@ Default Parameters:
 - Obstacle Start: 2.5 s
 - Obstacle End:   4.5 s
 
-===============================================================================
 5. EXPECTED OUTPUTS
-===============================================================================
 Upon successful execution, the notebook will generate:
 
 1. Solver Logs:
@@ -92,9 +80,7 @@ Upon successful execution, the notebook will generate:
    - "Obstacle Sensitivity Analysis": A bar graph of Lagrange Multipliers 
      showing the "cost" imposed by the obstacle constraint at each time step.
 
-===============================================================================
 6. METHODOLOGY & SOLVER DETAILS
-===============================================================================
 - Formulation: We formulated the problem as minimizing $\sum u_k^2$ subject to 
   linear dynamics and box constraints. Slack variables were added to soft 
   constraints to ensure feasibility.
@@ -103,5 +89,3 @@ Upon successful execution, the notebook will generate:
   - OSQP (Operator Splitting Quadratic Program): Selected as the primary solver 
     due to its speed and robustness for QPs.
   - SCS (Splitting Conic Solver): Used for benchmarking purposes.
-
-===============================================================================
