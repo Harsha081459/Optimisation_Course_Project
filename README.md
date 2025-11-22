@@ -7,8 +7,8 @@ Submission Date:  23/11/2025
 
 
 Team Members:
-1. D Harsha Vardhan (BT2024106)
-2. P Prajwal        (BT2024245)
+- D Harsha Vardhan (BT2024106)
+- P Prajwal        (BT2024245)
 
 
 1. PROJECT DESCRIPTION
