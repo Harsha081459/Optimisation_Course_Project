@@ -57,13 +57,23 @@ During execution, you will be prompted for simulation parameters. (Press ENTER t
 
 Default parameters:
 
-Time steps:-       0.1 s
 
-Horizon:-          50 steps
+| Input               | Description                           | Default |
+| ------------------- | ------------------------------------- | ------- |
+| **dt**              | Time step (seconds)                   | `0.1`   |
+| **N**               | Number of simulation steps            | `50`    |
+| **init_y**          | Initial lateral position (m)          | `0.0`   |
+| **init_vy**         | Initial lateral velocity (m/s)        | `0.0`   |
+| **target_y**        | Target lane center (m)                | `3.5`   |
+| **final_vy_target** | Required final lateral velocity (m/s) | `0.0`   |
+| **u_max**           | Maximum lateral acceleration (m/s²)   | `3.0`   |
+| **v_max**           | Maximum lateral velocity (m/s)        | `2.0`   |
+| **jerk_max**        | Maximum jerk (m/s³)                   | `2.0`   |
+| **penalty_slack**   | Soft-constraint penalty weight        | `1e6`   |
+| **plot_result**     | Plot trajectories? (`y/n`)            | `y`     |
+| **Obstacle Start**  | Start time of obstacle window (s)     | `2.5`   |
+| **Obstacle End**    | End time of obstacle window (s)       | `4.5`   |
 
-Obstacle Start:-   2.5 s
-
-Obstacle End:-     4.5 s
 
 
 
