@@ -26,11 +26,17 @@ KEY FEATURES:
 - Interactive user inputs for simulation parameters
 
 
-FILE STRUCTURE:
-OPTICORS/
-├── Implementation.ipynb          (Main implementation and visualizations)
-├── Project_Report.pdf           (Detailed exploration results and methodology)
-└── README.md                    (Documentation)
+2. FILE STRUCTURE
+The project directory contains the following key files:
+
+- Implementation.ipynb : (MAIN) The Jupyter Notebook containing the code, 
+                         visualizations, and analysis.
+- Implementation.py    : The standalone Python script version of the code.
+- Report.pdf           : The detailed project report covering formulation, 
+                         methodology, and results.
+- 1pageproposal.pdf    : The original project proposal document.
+- README.txt           : This documentation file.
+- README.md            : Markdown version of this documentation.
 
 
 SETUP & EXECUTION:

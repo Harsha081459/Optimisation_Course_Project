@@ -33,12 +33,14 @@ The vehicle is modeled using discrete-time double-integrator dynamics, and the p
 
 ---
 
-## 📁 File Structure
-OPTICORS/
+## 2. FILE STRUCTURE
+The project directory contains the following key files:
 
-- Implementation.ipynb # Main implementation and visualizations
-- Project_Report.pdf # Detailed exploration results and methodology
-- README.md # Documentation (this file)
+* Implementation.ipynb : *(MAIN)* The Jupyter Notebook containing the code, visualizations, and analysis.
+* Implementation.py : The standalone Python script version of the code.
+* Report.pdf : The detailed project report covering formulation, methodology, and results.
+* 1pageproposal.pdf : The original project proposal document.
+* README.md : This documentation file.
 
 
 ---
