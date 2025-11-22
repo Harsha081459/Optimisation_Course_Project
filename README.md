@@ -8,8 +8,8 @@
 
 ## 👥 Team Members
 
-- **D Horsha Venihan** (BT2024108)
-- **P Pripuel** (BT2024245)
+- **D Harsha Vardhan** (BT2024108)
+- **P Prajwal** (BT2024245)
 
 ---
 
