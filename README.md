@@ -81,21 +81,21 @@ Default parameters:
 
 
 
-
-
 ## 📊 Expected Outputs
 
 1. **Solver Logs**
-    -Optimality status
-    -Runtime comparison between OSQP and SCS
+   
+-Optimality status
+-Runtime comparison between OSQP and SCS
 
 2. **Plots & Visualizations**
 
-    -Solver runtime bar chart
-    -KKT condition verification (primal & dual feasibility)
-    -Trajectory plot showing lane change and obstacle zone (red region)
-    -Lagrange multipliers plot showing obstacle constraint sensitivity
-    
+-Solver runtime bar chart
+-KKT condition verification (primal & dual feasibility)
+-Trajectory plot showing lane change and obstacle zone (red region)
+-Lagrange multipliers plot showing obstacle constraint sensitivity
+
+
 
 ---
 
