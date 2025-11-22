@@ -24,16 +24,13 @@ def main():
     dt = get_input("dt (s)", 0.1, float, lambda v: v > 0)
     N = get_input("N (steps, integer >=1)", 50, int, lambda v: v >= 1)
     init_y = get_input("init_y (m)", 0.0, float)
+    v_max = get_input("v_max (m/s)", 2.0, float, lambda v: v >= 0)
     init_vy = get_input("init_vy (m/s)", 0.0, float)
     target_y = get_input("target_y (m)", 3.5, float)
-    final_vy_target = get_input("final_vy_target (m/s)", 0.0, float)
     u_max = get_input("u_max (m/s^2)", 3.0, float, lambda v: v >= 0)
-    v_max = get_input("v_max (m/s)", 2.0, float, lambda v: v >= 0)
     jerk_max = get_input("jerk_max (m/s^3)", 2.0, float, lambda v: v >= 0)
     penalty_slack = get_input("penalty_slack", 1e6, float, lambda v: v > 0)
-    plot_result = input("plot_result (y/n) [y]: ").strip().lower()
-    if plot_result == "":
-        plot_result = "y"
+    final_vy_target = get_input( f"final_vy_target (m/s) ≤ v_max({v_max})", 0.0, float, validator=lambda v: v <= v_max)
 
     
     #STRICT OBSTACLE VALIDATION (INDEX-BASED)
@@ -118,6 +115,8 @@ def main():
     osqp_primal_indicator = []
     scs_dual_indicator = []
     scs_primal_indicator = []
+    osqp_comp_slack = []
+    scs_comp_slack = []
 
     #---------------- OSQP timing ----------------
     t0 = time.time()
@@ -133,6 +132,12 @@ def main():
         osqp_dual_indicator.append(1 if dual >= 0 else -1)
         primal_gap = float(c.violation())
         osqp_primal_indicator.append(1 if primal_gap <= 0 else -1)
+        comp = dual * primal_gap
+        osqp_comp_slack.append(abs(comp))
+    #printing first 10 complementary slackness values
+    for i in range(10):
+        print("Complementary slackness OSQP:", osqp_comp_slack[i])
+
     #---Obstacle dual values (OSQP) ---
     obs_duals = []
     for c in obs_constraints:
@@ -158,7 +163,12 @@ def main():
         scs_dual_indicator.append(1 if dual >= 0 else -1)
         primal_gap = float(c.violation())
         scs_primal_indicator.append(1 if primal_gap <= 0 else -1)
-
+        comp = dual * primal_gap
+        scs_comp_slack.append(abs(comp))
+    #printing first 10 complementary slackness values
+    for i in range(10):
+        print("Complementary slackness SCS:", scs_comp_slack[i])
+        
     x_scs = np.array(x.value)
     u_scs = np.array(u.value).reshape(-1)
 
@@ -187,7 +197,6 @@ def main():
 
     #--------- KKT plot ---------
     plt.figure(figsize=(12, 10))
-
     ks = np.arange(len(kkt_constraint))
 
     plt.subplot(2, 2, 1)
@@ -244,36 +253,35 @@ def main():
 
 
     #-------------- Trajectory & control plot --------------
-    if plot_result.startswith('y'):
 
-        t = np.arange(N+1) * dt
-        fig, axs = plt.subplots(2, 1, figsize=(10, 8))
+    t = np.arange(N+1) * dt
+    fig, axs = plt.subplots(2, 1, figsize=(10, 8))
 
-        axs[0].plot(t, x_osqp[0, :], marker='o', label='OSQP')
-        axs[0].plot(t, x_scs[0, :], marker='x', label='SCS')
-        axs[0].axhline(target_y, color='k', linestyle='--')
+    axs[0].plot(t, x_osqp[0, :], marker='o', label='OSQP')
+    axs[0].plot(t, x_scs[0, :], marker='x', label='SCS')
+    axs[0].axhline(target_y, color='k', linestyle='--')
 
-        rect = patches.Rectangle(
-            (k_obs_start * dt, -10),
-            (k_obs_end - k_obs_start) * dt,
-            target_y + 10,
-            color='red', alpha=0.3
-        )
-        axs[0].add_patch(rect)
+    rect = patches.Rectangle(
+        (k_obs_start * dt, -10),
+        (k_obs_end - k_obs_start) * dt,
+        target_y + 10,
+        color='red', alpha=0.3
+    )
+    axs[0].add_patch(rect)
 
-        axs[0].set_ylabel("y (position)")
-        axs[0].legend()
-        axs[0].set_title("Trajectory Comparison: OSQP vs SCS")
+    axs[0].set_ylabel("y (position)")
+    axs[0].legend()
+    axs[0].set_title("Trajectory Comparison: OSQP vs SCS")
 
-        axs[1].step(t[:-1], u_osqp, where='post', label='OSQP', marker='o')
-        axs[1].step(t[:-1], u_scs, where='post', label='SCS', marker='x')
-        axs[1].set_xlabel("time (s)")
-        axs[1].set_ylabel("u (acc)")
-        axs[1].legend()
-        axs[1].set_title("Control Comparison")
+    axs[1].step(t[:-1], u_osqp, where='post', label='OSQP', marker='o')
+    axs[1].step(t[:-1], u_scs, where='post', label='SCS', marker='x')
+    axs[1].set_xlabel("time (s)")
+    axs[1].set_ylabel("u (acc)")
+    axs[1].legend()
+    axs[1].set_title("Control Comparison")
 
-        plt.tight_layout()
-        plt.show()
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == "__main__":
     main()
