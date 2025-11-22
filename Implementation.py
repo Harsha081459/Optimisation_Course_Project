@@ -1,11 +1,11 @@
-# importing libraries
+#importing libraries
 import numpy as np
 import cvxpy as cp
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import time
 
-# input helper function
+#input helper function
 def get_input(prompt, default, cast=float, validator=None):
     while True:
         s = input(f"{prompt} [{default}]: ").strip()
@@ -19,7 +19,7 @@ def get_input(prompt, default, cast=float, validator=None):
         except:
             print("Invalid input. Try again.")
 
-# ------- main --------
+#------- main --------
 def main():
     dt = get_input("dt (s)", 0.1, float, lambda v: v > 0)
     N = get_input("N (steps, integer >=1)", 50, int, lambda v: v >= 1)
@@ -35,9 +35,8 @@ def main():
     if plot_result == "":
         plot_result = "y"
 
-    # ==========================
-    # STRICT OBSTACLE VALIDATION (INDEX-BASED)
-    # ==========================
+    
+    #STRICT OBSTACLE VALIDATION (INDEX-BASED)
 
     print("\nEnter obstacle times (in seconds).")
     print("They will be converted into step indices using floor/ceil.\n")
@@ -46,11 +45,11 @@ def main():
         obs_t_start = get_input("Obstacle start time (s)", 2.5, float)
         obs_t_end   = get_input("Obstacle end   time (s)", 4.5, float)
 
-        # convert time → index
+        #convert time -> index
         k_obs_start = int(np.floor(obs_t_start / dt))
         k_obs_end   = int(np.ceil(obs_t_end / dt))
 
-        # Now validate USING INDEX CONDITIONS
+        #Now validate USING INDEX CONDITIONS
         if not (0 <= k_obs_start < k_obs_end <= N):
             print("\nERROR: Invalid obstacle time window.")
             print("After converting to indices:")
@@ -62,11 +61,11 @@ def main():
 
         break
 
-    # dynamic matrices
+    #dynamic matrices
     A = np.array([[1.0, dt], [0.0, 1.0]])
     B = np.array([[0.5 * dt * dt], [dt]])
 
-    # Decision variables
+    #Decision variables
     u = cp.Variable((N, 1))
     x = cp.Variable((2, N+1))
     slack_u = cp.Variable((N, 1))
@@ -76,13 +75,13 @@ def main():
     constraints = [x[:, 0] == np.array([init_y, init_vy], dtype=float)]
     cost = 0
 
-    # Store KKT constraints
+    #Store KKT constraints
     kkt_constraint = []
 
     for k in range(N):
         constraints += [x[:, k+1] == A @ x[:, k] + B[:, 0] * u[k, 0]]
 
-        # Explicitly store u_max constraint
+        #Explicitly store u_max constraint
         c_u = (cp.abs(u[k, 0]) <= u_max + slack_u[k, 0])
         constraints += [c_u]
         kkt_constraint.append(c_u)
@@ -103,38 +102,38 @@ def main():
                              cp.sum_squares(slack_v) +
                              cp.sum_squares(slack_final))
 
-    # Add obstacle constraints
+    #Add obstacle constraints
     obs_constraints = []
     for k in range(k_obs_start, k_obs_end):
         c_obs = (x[0, k] >= target_y)
         constraints += [c_obs]
         obs_constraints.append(c_obs)
 
-    # Build problems
+    #Build problems
     prob1 = cp.Problem(cp.Minimize(cost), constraints)
     prob2 = cp.Problem(cp.Minimize(cost), constraints)
 
-    # Store KKT indicators for both solvers
+    #Store KKT indicators for both solvers
     osqp_dual_indicator = []
     osqp_primal_indicator = []
     scs_dual_indicator = []
     scs_primal_indicator = []
 
-    # ---------------- OSQP timing ----------------
+    #---------------- OSQP timing ----------------
     t0 = time.time()
     prob1.solve(solver=cp.OSQP, verbose=False)
     osqp_time = time.time() - t0
     print("\nOSQP Solve status:", prob1.status)
     print(f"OSQP time taken = {osqp_time:.6f} seconds")
 
-    # KKT check (OSQP)
+    #KKT check (OSQP)
     for k_check in range(len(kkt_constraint)):
         c = kkt_constraint[k_check]
         dual = float(c.dual_value)
         osqp_dual_indicator.append(1 if dual >= 0 else -1)
         primal_gap = float(c.violation())
         osqp_primal_indicator.append(1 if primal_gap <= 0 else -1)
-    # ---Obstacle dual values (OSQP) ---
+    #---Obstacle dual values (OSQP) ---
     obs_duals = []
     for c in obs_constraints:
         dv = c.dual_value
@@ -145,14 +144,14 @@ def main():
     x_osqp = np.array(x.value)
     u_osqp = np.array(u.value).reshape(-1)
 
-    # ---------------- SCS timing ----------------
+    #---------------- SCS timing ----------------
     t1 = time.time()
     prob2.solve(solver=cp.SCS, verbose=False)
     scs_time = time.time() - t1
     print("\nSCS Solve status:", prob2.status)
     print(f"SCS time taken  = {scs_time:.6f} seconds")
 
-    # KKT check (SCS)
+    #KKT check (SCS)
     for k_check in range(len(kkt_constraint)):
         c = kkt_constraint[k_check]
         dual = float(c.dual_value)
@@ -163,7 +162,7 @@ def main():
     x_scs = np.array(x.value)
     u_scs = np.array(u.value).reshape(-1)
 
-    # -------------- Comparison summary --------------
+    #-------------- Comparison summary --------------
     print("\n===== Solver Comparison =====")
     print(f"OSQP time: {osqp_time:.6f} s")
     print(f"SCS  time: {scs_time:.6f} s")
@@ -175,7 +174,7 @@ def main():
         print("Both equal.")
     print("================================")
 
-    # -------------- Bar plot for solver times --------------
+    #-------------- Bar plot for solver times --------------
     solvers = ["OSQP", "SCS"]
     times = [osqp_time, scs_time]
 
@@ -186,7 +185,7 @@ def main():
     plt.grid(axis='y', linestyle='--', alpha=0.5)
     plt.show()
 
-    # --------- KKT plot ---------
+    #--------- KKT plot ---------
     plt.figure(figsize=(12, 10))
 
     ks = np.arange(len(kkt_constraint))
@@ -218,9 +217,7 @@ def main():
     plt.tight_layout()
     plt.show()
 
-        # ======================================
-    # OBSTACLE SENSITIVITY (Dual Values)
-    # ======================================
+    #OBSTACLE SENSITIVITY (Dual Values)
     plt.figure(figsize=(8, 5))
 
     obs_steps = np.arange(k_obs_start, k_obs_end)
@@ -246,7 +243,7 @@ def main():
     plt.show()
 
 
-    # -------------- Trajectory & control plot --------------
+    #-------------- Trajectory & control plot --------------
     if plot_result.startswith('y'):
 
         t = np.arange(N+1) * dt
