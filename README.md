@@ -81,53 +81,20 @@ Default parameters:
 
 
 
+## 📊 Expected Outputs
+
+1. **Solver Logs**
+       
+    1. Optimality status
+    2. Runtime comparison between OSQP and SCS
 
 
-📊 Expected Outputs
-1. Solver Logs
+2. **Plots & Visualizations**
 
-✔ Optimality status (Optimal / Infeasible / Unbounded)
-
-✔ Runtime comparison between the two solvers:
-
-OSQP (primary QP solver)
-
-SCS (benchmark solver)
-
-2. Plots & Visualizations
-🔹 Solver Runtime Bar Chart
-
-A bar plot comparing how long OSQP and SCS take to solve the same QP.
-
-🔹 KKT Condition Verification
-
-Two sets of stem plots showing:
-
-Primal feasibility
-
-Dual feasibility
-
-These validate whether the solver satisfies KKT conditions.
-
-🔹 Trajectory Plot
-
-A time vs. lateral position graph showing:
-
-The lane-change path
-
-The obstacle danger zone (highlighted in red)
-
-This visualizes how the vehicle avoids the obstacle.
-
-🔹 Lagrange Multiplier (Shadow Price) Plot
-
-A bar/line plot showing:
-
-Dual values of obstacle constraints
-
-Indicates how strongly the obstacle influenced the optimal solution
-
-Higher values mean the constraint was active and important.
+    1. Solver runtime bar chart
+    2. KKT condition verification (primal & dual feasibility)
+    3. Trajectory plot showing lane change and obstacle zone (red region)
+    4. Lagrange multipliers plot showing obstacle constraint sensitivity
 
 
 ---
