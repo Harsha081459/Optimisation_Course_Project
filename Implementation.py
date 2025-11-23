@@ -26,7 +26,7 @@ def main():
     init_y = get_input("init_y (m)", 0.0, float, lambda v: v >= 0)
     v_max = get_input("v_max (m/s)", 2.0, float, lambda v: v >= 0)
     init_vy = get_input("init_vy (m/s)", 0.0, float)
-    target_y = get_input("target_y (m)", 3.5, float)
+    target_y = get_input("target_y (m)", 3.5, float, lambda v: v >= 0)
     u_max = get_input("u_max (m/s^2)", 3.0, float, lambda v: v >= 0)
     jerk_max = get_input("jerk_max (m/s^3)", 2.0, float, lambda v: v >= 0)
     penalty_slack = get_input("penalty_slack", 1e6, float, lambda v: v > 0)
